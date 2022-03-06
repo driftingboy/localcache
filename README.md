@@ -2,6 +2,20 @@
 
 localcache 是一个分布式缓存系统，参考 groupcache，将在其基础上引入 节点增删、缓存失效、发布订阅等功能
 
+使用案例
+1.启动服务
+```shell
+cd ./localcache/server
+make run
+```
+2.测试服务
+```shell
+curl "http://localhost:8001/cache/db1/1" && \
+curl "http://localhost:8002/cache/db1/2" && \
+curl "http://localhost:8003/cache/db1/3"
+```
+
+
 服务端维护路由信息，简单，但有单点问题
 ![image](https://res.craft.do/user/full/c08a465b-93e5-c0ee-4310-637acb8215b4/doc/E9DDF3EA-D499-4564-AEB0-6111D0F760CA/4EE8B491-CE79-4C59-B609-4E5B90394387_2/R1g7Vq8JKEtwVKFVuHa9RvD7jsTC9vLXjPXH7y8zzq4z/Image.png)
 
