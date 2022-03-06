@@ -12,6 +12,8 @@ var (
 	defaultMaxBytes int64 = 4096 * 1024
 )
 
+var _ cache.Cache = (*Cache)(nil)
+
 type Cache struct {
 	// limit max items in cache
 	maxItem int
@@ -23,7 +25,7 @@ type Cache struct {
 	index    map[string]*list.Element
 	data     *list.List
 
-	afterDelKey func(key cache.Key, val cache.Value)
+	afterDelKey func(key string, val cache.Value)
 }
 
 func NewCache(opts ...Option) *Cache {
@@ -42,20 +44,20 @@ func NewCache(opts ...Option) *Cache {
 }
 
 type Item struct {
-	key   cache.Key
+	key   string
 	value cache.Value
 }
 
-func (c *Cache) Set(key cache.Key, value cache.Value) {
-	k := key.Key()
-	if e, ok := c.index[k]; ok {
+func (c *Cache) Set(key string, value cache.Value) {
+
+	if e, ok := c.index[key]; ok {
 		c.data.MoveToFront(e)
 		item := e.Value.(*Item)
 		c.bytesNum += value.BytesNum() - item.value.BytesNum()
 		item.value = value
 	} else {
 		newE := c.data.PushFront(&Item{key: key, value: value})
-		c.index[k] = newE
+		c.index[key] = newE
 		c.bytesNum += value.BytesNum()
 	}
 
@@ -78,8 +80,8 @@ func (c *Cache) isMaxLimit() bool {
 	}
 }
 
-func (c Cache) Get(key cache.Key) (v cache.Value, ok bool) {
-	e, ok := c.index[key.Key()]
+func (c Cache) Get(key string) (v cache.Value, ok bool) {
+	e, ok := c.index[key]
 	if !ok {
 		return nil, false
 	}
@@ -88,12 +90,12 @@ func (c Cache) Get(key cache.Key) (v cache.Value, ok bool) {
 	return e.Value.(*Item).value, true
 }
 
-func (c *Cache) Del(key cache.Key) {
+func (c *Cache) Del(key string) {
 	if c == nil {
 		return
 	}
 
-	e, ok := c.index[key.Key()]
+	e, ok := c.index[key]
 	if !ok {
 		return
 	}
@@ -119,8 +121,8 @@ func (c *Cache) DelOldest() {
 func (c *Cache) delElement(e *list.Element) {
 	kv := e.Value.(*Item)
 	c.data.Remove(e)
-	delete(c.index, kv.key.Key())
-	c.bytesNum -= int64(len(kv.key.Key())) + kv.value.BytesNum()
+	delete(c.index, kv.key)
+	c.bytesNum -= int64(len(kv.key)) + kv.value.BytesNum()
 
 	if c.afterDelKey != nil {
 		c.afterDelKey(kv.key, kv.value)

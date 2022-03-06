@@ -1,23 +1,22 @@
 # localcache
-本地缓存管理
 
-最后总结下来
+localcache 是一个分布式缓存系统，参考 groupcache，将在其基础上引入 节点增删、缓存失效、发布订阅等功能
 
-避免绝大部分多余的内存分配行为，能复用绝不分配。
-善用sync.Pool。
-尽量避免[]byte与string之间转换带来的开销。
-巧用[]byte相关的特性。
+服务端维护路由信息，简单，但有单点问题
+![image](https://res.craft.do/user/full/c08a465b-93e5-c0ee-4310-637acb8215b4/doc/E9DDF3EA-D499-4564-AEB0-6111D0F760CA/4EE8B491-CE79-4C59-B609-4E5B90394387_2/R1g7Vq8JKEtwVKFVuHa9RvD7jsTC9vLXjPXH7y8zzq4z/Image.png)
 
+客户端维护，复杂
+![image](https://res.craft.do/user/full/c08a465b-93e5-c0ee-4310-637acb8215b4/doc/E9DDF3EA-D499-4564-AEB0-6111D0F760CA/61C2CA3E-3F5E-45F9-AE9C-D0C6E51588B0_2/19zsn1DqoKrQuJ8jx2bOlxJAoflHLBCUJrIBpCCFQLYz/Image.png)
 
-- 避免string与[]byte转换开销
-这两种类型转换是带内存分配与拷贝开销的，但有一种办法(trick)能够避免开销。利用了string和slice在runtime里结构只差一个Cap字段实现的
+当然两者可以结合使用
 
-- 不放过能复用内存的地方
-有些地方需要kv型数据，一般使用map[string]string。但map不利于复用。所以fasthttp使用slice来实现了map
+groupcache中每个节点都是相同的代码，即有分片路由能力，也保存缓存数据；这就导致路由信息保存在多个地方，不好维护，所以groupcache也没有提供增删节点的操作
+![image](https://res.craft.do/user/full/c08a465b-93e5-c0ee-4310-637acb8215b4/doc/E9DDF3EA-D499-4564-AEB0-6111D0F760CA/CD5D8367-C985-4820-9866-E0DA9064D6F8_2/gLDfTg03Xf4cxVMVmFPO9ILRjENGPBHtX59rsIq6Lrwz/Image.png)
 
-- 方法参数尽量用[]byte. 纯写场景可避免用bytes.Buffer
-方法参数使用[]byte，这样做避免了[]byte到string转换时带来的内存分配和拷贝。毕竟本来从net.Conn读出来的数据也是[]byte类型。
+整个查询流程如下：
+接收 key --> 检查是否被缓存 -----> 返回缓存值 ⑴
+                |  否                         是
+                |-----> 是否应当从远程节点获取 -----> 与远程节点交互 --> 返回缓存值 ⑵
+                            |  否
+                            |-----> 调用`回调函数`，获取值并添加到缓存 --> 返回缓存值 ⑶
 
-某些地方确实想传string类型参数，fasthttp也提供XXString()方法。
-
-String方法背后是利用了a = append(a, string…)。这样做不会造成string到[]byte的转换(该结论通过查看汇编得到，汇编里并没用到runtime.stringtoslicebyte方法)

@@ -7,12 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type key string
-
-func (k key) Key() string {
-	return string(k)
-}
-
 type value string
 
 func (v value) BytesNum() int64 {
@@ -21,11 +15,11 @@ func (v value) BytesNum() int64 {
 
 func Example() {
 	cache := NewCache()
-	cache.Set(key("a"), value("test"))
-	got, _ := cache.Get(key("a"))
+	cache.Set("a", value("test"))
+	got, _ := cache.Get("a")
 	fmt.Println(got)
-	cache.Del(key("a"))
-	_, ok := cache.Get(key("a"))
+	cache.Del("a")
+	_, ok := cache.Get("a")
 	fmt.Println(ok)
 	//Output:
 	//test
@@ -34,18 +28,18 @@ func Example() {
 
 func TestCache_Set(t *testing.T) {
 	c := NewCache(WithMaxItem(3))
-	c.Set(key("a"), value("a"))
-	c.Set(key("b"), value("b"))
-	c.Set(key("c"), value("c"))
-	c.Set(key("d"), value("d"))
+	c.Set("a", value("a"))
+	c.Set("b", value("b"))
+	c.Set("c", value("c"))
+	c.Set("d", value("d"))
 
-	_, ok := c.Get(key("a"))
+	_, ok := c.Get("a")
 	assert.False(t, ok)
-	_, ok = c.Get(key("b"))
+	_, ok = c.Get("b")
 	assert.True(t, ok)
-	c.Set(key("e"), value("e"))
-	_, ok1 := c.Get(key("b"))
-	_, ok2 := c.Get(key("c"))
+	c.Set("e", value("e"))
+	_, ok1 := c.Get("b")
+	_, ok2 := c.Get("c")
 	assert.True(t, ok1)
 	assert.False(t, ok2)
 }

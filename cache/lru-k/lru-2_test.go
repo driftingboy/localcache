@@ -16,8 +16,8 @@ func (v value) BytesNum() int64 {
 
 func Example() {
 	cache := NewCache(1024, 10)
-	cache.Set(key("a"), value("a"))
-	v, ok := cache.Get(key("a"))
+	cache.Set("a", value("a"))
+	v, ok := cache.Get("a")
 	fmt.Println(v, ok)
 	//Output:
 	//a true

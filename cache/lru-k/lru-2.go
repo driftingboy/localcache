@@ -33,14 +33,14 @@ func NewCache(maxDataBytes int64, maxBufSize int) *Cache {
 }
 
 type Item struct {
-	key   cache.Key
+	key   string
 	value cache.Value
 }
 
-func (c *Cache) Set(key cache.Key, value cache.Value) {
-	if ele, ok := c.bufIndex[key.Key()]; !ok {
+func (c *Cache) Set(key string, value cache.Value) {
+	if ele, ok := c.bufIndex[key]; !ok {
 		newE := c.bufQueue.PushFront(&Item{key: key, value: value})
-		c.bufIndex[key.Key()] = newE
+		c.bufIndex[key] = newE
 
 		if c.bufQueue.Len() > c.maxBufSize {
 			c.DelBufOldest()
@@ -52,12 +52,12 @@ func (c *Cache) Set(key cache.Key, value cache.Value) {
 
 }
 
-func (c *Cache) Get(key cache.Key) (v cache.Value, ok bool) {
+func (c *Cache) Get(key string) (v cache.Value, ok bool) {
 	if v, ok := c.data.Get(key); ok {
 		return v, ok
 	}
 
-	if ele, ok := c.bufIndex[key.Key()]; ok {
+	if ele, ok := c.bufIndex[key]; ok {
 		v := ele.Value.(*Item).value
 		c.data.Set(key, v)
 		c.bufQueue.Remove(ele)
@@ -67,8 +67,8 @@ func (c *Cache) Get(key cache.Key) (v cache.Value, ok bool) {
 	return nil, false
 }
 
-func (c *Cache) Del(key cache.Key) {
-	if ele, ok := c.bufIndex[key.Key()]; ok {
+func (c *Cache) Del(key string) {
+	if ele, ok := c.bufIndex[key]; ok {
 		c.delBufElement(ele)
 	}
 
@@ -93,7 +93,7 @@ func (c *Cache) DelBufOldest() {
 func (c *Cache) delBufElement(e *list.Element) {
 	kv := e.Value.(*Item)
 	c.bufQueue.Remove(e)
-	delete(c.bufIndex, kv.key.Key())
+	delete(c.bufIndex, kv.key)
 }
 
 // today finsh it and cache interface

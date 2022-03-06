@@ -1,0 +1,21 @@
+# server config
+server:
+  endpoint: localhost:9999
+
+# cache config
+cache:
+  # global config
+  db_num: 5
+  type: lru
+  max_items: 1024
+  max_bytes: 102400
+  # User defined db attributes. Undefined attributes are defined according to global config
+  dbs:
+  -
+  name: top_db
+  type: noe
+  max_bytes: 409600
+  -
+  name: history_db
+  type: random
+  max_bytes: 409600

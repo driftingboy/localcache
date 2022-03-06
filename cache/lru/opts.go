@@ -16,7 +16,7 @@ func WithMaxBytes(mb int64) Option {
 	}
 }
 
-func WithAfterDelFunc(f func(key cache.Key, val cache.Value)) Option {
+func WithAfterDelFunc(f func(key string, val cache.Value)) Option {
 	return func(c *Cache) {
 		c.afterDelKey = f
 	}
